@@ -65,14 +65,17 @@ async fn test_chart_endpoints_ok() {
 async fn test_chart_endpoints_work_with_not_indexed_blockscout() {
     let test_name = "test_chart_endpoints_work_with_not_indexed_blockscout";
     let (stats_db, blockscout_db) = init_db_all(test_name).await;
-    let blockscout_api = mock_blockscout_api(ResponseTemplate::new(200).set_body_string(
-        r#"{
-            "finished_indexing": false,
-            "finished_indexing_blocks": false,
-            "indexed_blocks_ratio": "0.10",
-            "indexed_internal_transactions_ratio": null
-        }"#,
-    ))
+    let blockscout_api = mock_blockscout_api(
+        ResponseTemplate::new(200).set_body_string(
+            r#"{
+                "finished_indexing": false,
+                "finished_indexing_blocks": false,
+                "indexed_blocks_ratio": "0.10",
+                "indexed_internal_transactions_ratio": null
+            }"#,
+        ),
+        None,
+    )
     .await;
     fill_mock_blockscout_data(&blockscout_db, NaiveDate::from_str("2023-03-01").unwrap()).await;
     std::env::set_var("STATS__CONFIG", "./tests/config/test.toml");

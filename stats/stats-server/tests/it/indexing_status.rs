@@ -2,7 +2,10 @@ use blockscout_service_launcher::test_server::{init_server, send_get_request};
 use itertools::Itertools;
 use pretty_assertions::assert_eq;
 
-use stats::tests::{init_db::init_db_all, mock_blockscout::mock_blockscout_api};
+use stats::tests::{
+    init_db::init_db_all,
+    mock_blockscout::{mock_blockscout_api, user_ops_status_response_json},
+};
 use stats_proto::blockscout::stats::v1::{
     health_check_response::ServingStatus, Counters, HealthCheckResponse,
 };
@@ -17,14 +20,17 @@ async fn test_not_indexed_ok() {
     // check that when the blockscout is not indexed, the healthcheck still succeeds and
     // charts don't have any points (i.e. they are not updated)
     let (stats_db, blockscout_db) = init_db_all("test_not_indexed_ok").await;
-    let blockscout_api = mock_blockscout_api(ResponseTemplate::new(200).set_body_string(
-        r#"{
-            "finished_indexing": false,
-            "finished_indexing_blocks": false,
-            "indexed_blocks_ratio": "0.00",
-            "indexed_internal_transactions_ratio": "0.00"
-        }"#,
-    ))
+    let blockscout_api = mock_blockscout_api(
+        ResponseTemplate::new(200).set_body_string(
+            r#"{
+                "finished_indexing": false,
+                "finished_indexing_blocks": false,
+                "indexed_blocks_ratio": "0.00",
+                "indexed_internal_transactions_ratio": "0.00"
+            }"#,
+        ),
+        Some(ResponseTemplate::new(200).set_body_string(user_ops_status_response_json(false))),
+    )
     .await;
 
     std::env::set_var("STATS__CONFIG", "./tests/config/test.toml");
